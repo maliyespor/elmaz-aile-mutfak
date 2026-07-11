@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import {
   getRedirectResult,
   onAuthStateChanged,
+  signInWithPopup,
   signInWithRedirect,
   signOut,
   type User,
@@ -116,10 +117,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signIn() {
     setError(null)
-    // Popups get blocked on mobile browsers and installed PWAs, so use a
-    // full-page redirect instead — onAuthStateChanged picks up the result
-    // automatically once Google sends the user back.
-    await signInWithRedirect(auth, googleProvider)
+    try {
+      // Popup is the more reliable flow (works even when the app's origin
+      // differs from Firebase's authDomain), so try it first.
+      await signInWithPopup(auth, googleProvider)
+    } catch (err) {
+      const code = err instanceof Object && 'code' in err ? String((err as { code: unknown }).code) : ''
+      if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') {
+        // Popup unavailable (blocked, or running as an installed PWA) — fall
+        // back to a full-page redirect instead.
+        await signInWithRedirect(auth, googleProvider)
+      } else if (code !== 'auth/popup-closed-by-user' && code !== 'auth/cancelled-popup-request') {
+        setError(err instanceof Error ? err.message : String(err))
+      }
+    }
   }
 
   async function signOutUser() {
