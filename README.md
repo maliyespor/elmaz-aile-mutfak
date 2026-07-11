@@ -30,20 +30,31 @@ aynı haneye eklenmesi için:
 3. İkinci eşin Authentication sekmesinden UID'sini kopyalayıp bu belgenin `members` dizisine ekleyin.
 4. İkinci eşin kendi oluşturduğu (artık kullanılmayan) hane belgesini isteğe bağlı silebilirsiniz.
 
-### 4. GitHub Pages'e yayımlama
+### 4. Firebase Hosting'e yayımlama
+
+Site, Firebase Auth'un `authDomain`'i ile aynı alan adı ailesinde (`elmaz-aile-mutfak.web.app`)
+barındırılıyor. Bu, GitHub Pages gibi farklı bir alan adında barındırmanın mobil tarayıcılarda
+(özellikle Safari ve bazı Android Chrome sürümlerinde) Google girişini üçüncü taraf depolama
+kısıtlamaları yüzünden sessizce bozabildiği sorunu ortadan kaldırır. Kod hâlâ GitHub'da tutulur;
+sadece yayın hedefi GitHub Pages yerine Firebase Hosting'dir.
 
 1. GitHub'da boş bir repo oluşturun ve bu projeyi push edin.
-2. Repo **Settings → Pages → Source** kısmından **GitHub Actions**'ı seçin.
-3. Repo **Settings → Secrets and variables → Actions** kısmına şu secret'ları ekleyin (Firebase config'inizden):
+2. Repo **Settings → Secrets and variables → Actions** kısmına şu secret'ları ekleyin (Firebase config'inizden):
    - `VITE_FIREBASE_API_KEY`
    - `VITE_FIREBASE_AUTH_DOMAIN`
    - `VITE_FIREBASE_PROJECT_ID`
    - `VITE_FIREBASE_STORAGE_BUCKET`
    - `VITE_FIREBASE_MESSAGING_SENDER_ID`
    - `VITE_FIREBASE_APP_ID`
-4. Firebase konsolu → Authentication → Settings → **Authorized domains** kısmına GitHub Pages
-   adresinizi ekleyin (örn. `kullaniciadi.github.io`), yoksa Google girişi çalışmaz.
-5. `main` dalına push edince `.github/workflows/deploy.yml` otomatik build alıp yayımlar.
+3. Firebase Console → Proje Ayarları (⚙️) → **Service accounts** sekmesi → **Generate new private key**
+   ile bir JSON anahtar dosyası indirin. Bu dosyanın **tüm içeriğini** kopyalayıp repo →
+   **Settings → Secrets and variables → Actions**'a `FIREBASE_SERVICE_ACCOUNT_ELMAZ_AILE_MUTFAK`
+   adıyla yeni bir secret olarak ekleyin.
+4. `main` dalına push edince `.github/workflows/deploy.yml` otomatik build alıp
+   `https://elmaz-aile-mutfak.web.app` adresine yayımlar.
+
+`elmaz-aile-mutfak.web.app` ve `elmaz-aile-mutfak.firebaseapp.com` adresleri Firebase tarafından
+otomatik olarak yetkili alan adı (authorized domain) sayılır, ayrıca bir şey eklemenize gerek yok.
 
 ## Telefona kurulum
 
