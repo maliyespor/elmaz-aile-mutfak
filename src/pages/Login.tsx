@@ -1,7 +1,7 @@
 import { useAuth } from '../contexts/AuthContext'
 
 export default function Login() {
-  const { signIn } = useAuth()
+  const { signIn, error } = useAuth()
 
   return (
     <div className="centered-screen">
@@ -10,6 +10,7 @@ export default function Login() {
       <button className="primary-button" onClick={() => void signIn()}>
         Google ile Giriş Yap
       </button>
+      {error && <p className="error-text">Giriş yapılamadı: {error}</p>}
     </div>
   )
 }

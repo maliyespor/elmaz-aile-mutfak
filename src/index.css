@@ -83,6 +83,16 @@ select {
   gap: 12px;
 }
 
+.error-text {
+  color: var(--danger);
+  background: var(--danger-bg);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  max-width: 100%;
+  word-break: break-word;
+}
+
 /* Bottom navigation */
 
 .bottom-nav {

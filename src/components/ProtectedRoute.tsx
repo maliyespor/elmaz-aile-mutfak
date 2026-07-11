@@ -3,10 +3,18 @@ import { Navigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { user, household, loading } = useAuth()
+  const { user, household, loading, error } = useAuth()
 
   if (loading) {
     return <div className="centered-screen">Yükleniyor...</div>
+  }
+
+  if (error) {
+    return (
+      <div className="centered-screen">
+        <p className="error-text">Bir sorun oluştu: {error}</p>
+      </div>
+    )
   }
 
   if (!user || !household) {
