@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { onAuthStateChanged, signInWithPopup, signOut, type User } from 'firebase/auth'
+import { onAuthStateChanged, signInWithRedirect, signOut, type User } from 'firebase/auth'
 import { addDoc, collection, onSnapshot, query, serverTimestamp, where } from 'firebase/firestore'
 import { auth, db, googleProvider } from '../lib/firebase'
 import type { Household } from '../lib/types'
@@ -72,7 +72,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user])
 
   async function signIn() {
-    await signInWithPopup(auth, googleProvider)
+    // Popups get blocked on mobile browsers and installed PWAs, so use a
+    // full-page redirect instead — onAuthStateChanged picks up the result
+    // automatically once Google sends the user back.
+    await signInWithRedirect(auth, googleProvider)
   }
 
   async function signOutUser() {
