@@ -2,7 +2,6 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import {
   getRedirectResult,
   onAuthStateChanged,
-  signInWithPopup,
   signInWithRedirect,
   signOut,
   type User,
@@ -117,20 +116,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signIn() {
     setError(null)
-    try {
-      // Popup is the more reliable flow (works even when the app's origin
-      // differs from Firebase's authDomain), so try it first.
-      await signInWithPopup(auth, googleProvider)
-    } catch (err) {
-      const code = err instanceof Object && 'code' in err ? String((err as { code: unknown }).code) : ''
-      if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') {
-        // Popup unavailable (blocked, or running as an installed PWA) — fall
-        // back to a full-page redirect instead.
-        await signInWithRedirect(auth, googleProvider)
-      } else if (code !== 'auth/popup-closed-by-user' && code !== 'auth/cancelled-popup-request') {
-        setError(err instanceof Error ? err.message : String(err))
-      }
-    }
+    // A popup window can get silently closed by the OS when the user leaves
+    // the browser to approve a 2-step-verification prompt in another app, so
+    // it's unreliable on mobile. A full-page redirect survives that app
+    // switch, and now that the app is hosted on the same origin family as
+    // Firebase's authDomain, redirect works reliably in every browser.
+    await signInWithRedirect(auth, googleProvider)
   }
 
   async function signOutUser() {
