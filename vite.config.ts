@@ -9,6 +9,12 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        // Firebase Hosting serves the auth handler at /__/auth/*; without
+        // this exclusion the SW's navigation fallback swallows that URL and
+        // serves the app shell instead, so Google sign-in never opens.
+        navigateFallbackDenylist: [/^\/__\//],
+      },
       includeAssets: ['icons/icon.svg'],
       manifest: {
         name: 'Aile Mutfak Programı',
