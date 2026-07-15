@@ -39,11 +39,18 @@ export async function markShoppingItemBought(
   uid: string,
 ) {
   if (shoppingItem.source === 'inventory' && shoppingItem.linkedItemId) {
-    await updateDoc(doc(db, 'households', householdId, 'items', shoppingItem.linkedItemId), {
-      status: 'stokta',
-      updatedBy: uid,
-      updatedAt: serverTimestamp(),
-    })
+    // The linked inventory item may have been deleted while this entry was on
+    // the list; updateDoc rejects on a missing doc, which must NOT stop us from
+    // clearing the shopping entry (otherwise it gets stuck, unremovable).
+    try {
+      await updateDoc(doc(db, 'households', householdId, 'items', shoppingItem.linkedItemId), {
+        status: 'stokta',
+        updatedBy: uid,
+        updatedAt: serverTimestamp(),
+      })
+    } catch {
+      // Linked item gone — nothing to put back in stock; fall through to delete.
+    }
   }
   await deleteDoc(doc(db, 'households', householdId, 'shoppingItems', shoppingItem.id))
 }

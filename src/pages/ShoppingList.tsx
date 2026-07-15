@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import { addManualShoppingItem, subscribeToShoppingItems } from '../lib/shopping'
+import { addManualShoppingItem, removeShoppingItem, subscribeToShoppingItems } from '../lib/shopping'
 import { markShoppingItemBought } from '../lib/sync'
 import type { ShoppingItem } from '../lib/types'
 
@@ -28,6 +28,11 @@ export default function ShoppingList() {
     await markShoppingItemBought(household.id, item, user.uid)
   }
 
+  async function handleRemove(item: ShoppingItem) {
+    if (!household) return
+    await removeShoppingItem(household.id, item.id)
+  }
+
   return (
     <div className="page">
       <h1>Alışveriş Listesi</h1>
@@ -42,6 +47,14 @@ export default function ShoppingList() {
               <span className="shopping-name">{item.name}</span>
               {item.source === 'inventory' && <span className="shopping-tag">stoktan</span>}
             </label>
+            <button
+              type="button"
+              className="shopping-remove"
+              aria-label={`${item.name} ürününü listeden kaldır`}
+              onClick={() => void handleRemove(item)}
+            >
+              ×
+            </button>
           </li>
         ))}
       </ul>

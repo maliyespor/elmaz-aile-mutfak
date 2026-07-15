@@ -324,14 +324,36 @@ select {
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 4px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .shopping-row label {
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 10px 0;
   cursor: pointer;
+}
+
+.shopping-remove {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 22px;
+  line-height: 1;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.shopping-remove:hover {
+  background: var(--border);
+  color: var(--text);
 }
 
 .shopping-name {
