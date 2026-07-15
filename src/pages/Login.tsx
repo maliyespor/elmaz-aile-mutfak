@@ -1,12 +1,21 @@
 import { useState, type FormEvent } from 'react'
+import { Navigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function Login() {
-  const { signIn, signInWithEmail, error } = useAuth()
+  const { signIn, signInWithEmail, error, user } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+
+  // Email/password sign-in happens on this (unprotected) /giris route, so a
+  // successful login updates `user` but leaves the form on screen — nothing
+  // navigates into the app. Redirect once authenticated. (Google sign-in was
+  // unaffected because its redirect returns to "/" directly.)
+  if (user) {
+    return <Navigate to="/" replace />
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
