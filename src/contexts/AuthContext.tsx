@@ -1,9 +1,13 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import {
+  EmailAuthProvider,
   getRedirectResult,
+  linkWithCredential,
   onAuthStateChanged,
+  signInWithEmailAndPassword,
   signInWithRedirect,
   signOut,
+  updatePassword,
   type User,
 } from 'firebase/auth'
 import {
@@ -24,10 +28,41 @@ interface AuthContextValue {
   loading: boolean
   error: string | null
   signIn: () => Promise<void>
+  signInWithEmail: (email: string, password: string) => Promise<void>
+  setPassword: (newPassword: string) => Promise<void>
   signOutUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
+
+// Firebase reports auth failures as error codes; translate the ones a family
+// member can actually act on, and fall back to the raw message otherwise.
+function turkishAuthError(err: unknown): string {
+  const code = (err as { code?: string })?.code ?? ''
+  switch (code) {
+    case 'auth/invalid-credential':
+    case 'auth/wrong-password':
+    case 'auth/user-not-found':
+      return 'E-posta veya şifre hatalı.'
+    case 'auth/invalid-email':
+      return 'Geçersiz e-posta adresi.'
+    case 'auth/weak-password':
+      return 'Şifre en az 6 karakter olmalı.'
+    case 'auth/too-many-requests':
+      return 'Çok fazla deneme yapıldı. Birkaç dakika bekleyip tekrar deneyin.'
+    case 'auth/network-request-failed':
+      return 'İnternet bağlantısı kurulamadı. Bağlantınızı kontrol edin.'
+    case 'auth/operation-not-allowed':
+      return 'Şifreli giriş henüz etkinleştirilmemiş. Firebase konsolunda Email/Password sağlayıcısını açın.'
+    case 'auth/requires-recent-login':
+      return 'Güvenlik için önce çıkış yapıp yeniden giriş yapın, sonra şifreyi tekrar deneyin.'
+    case 'auth/email-already-in-use':
+    case 'auth/credential-already-in-use':
+      return 'Bu e-posta zaten başka bir hesaba bağlı.'
+    default:
+      return err instanceof Error ? err.message : String(err)
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -124,12 +159,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await signInWithRedirect(auth, googleProvider)
   }
 
+  // Password sign-in avoids the OAuth redirect entirely, so it is immune to
+  // the storage-partitioning problems that kept breaking Google sign-in on
+  // iOS. Errors are thrown (in Turkish) for the caller to show inline.
+  async function signInWithEmail(email: string, password: string) {
+    setError(null)
+    try {
+      await signInWithEmailAndPassword(auth, email.trim(), password)
+    } catch (err) {
+      throw new Error(turkishAuthError(err))
+    }
+  }
+
+  // Attaches a password to the signed-in account (same UID, so household
+  // membership is preserved), or changes it if one is already set.
+  async function setPassword(newPassword: string) {
+    const current = auth.currentUser
+    if (!current?.email) throw new Error('Oturum bulunamadı. Yeniden giriş yapın.')
+    try {
+      if (current.providerData.some((p) => p.providerId === 'password')) {
+        await updatePassword(current, newPassword)
+      } else {
+        await linkWithCredential(current, EmailAuthProvider.credential(current.email, newPassword))
+      }
+    } catch (err) {
+      throw new Error(turkishAuthError(err))
+    }
+  }
+
   async function signOutUser() {
     await signOut(auth)
   }
 
   return (
-    <AuthContext.Provider value={{ user, household, loading, error, signIn, signOutUser }}>
+    <AuthContext.Provider
+      value={{ user, household, loading, error, signIn, signInWithEmail, setPassword, signOutUser }}
+    >
       {children}
     </AuthContext.Provider>
   )

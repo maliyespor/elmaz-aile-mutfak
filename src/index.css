@@ -369,3 +369,27 @@ select {
   gap: 8px;
   margin-bottom: 24px;
 }
+
+.settings-hint {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.success-text {
+  color: var(--accent);
+  font-size: 14px;
+}
+
+/* Login */
+
+.login-form {
+  width: 100%;
+  max-width: 320px;
+  text-align: left;
+}
+
+.login-divider {
+  color: var(--text-muted);
+  font-size: 14px;
+}
